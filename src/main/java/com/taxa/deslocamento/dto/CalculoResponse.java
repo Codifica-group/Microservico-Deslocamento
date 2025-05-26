@@ -15,4 +15,16 @@ public class CalculoResponse {
     public double getDistanciaKm() { return distanciaKm; }
     public double getTaxa() { return taxa; }
     public double getTempoHoras() { return tempoHoras; }
+
+    public void setDistanciaKm(double distanciaKm) {
+        this.distanciaKm = distanciaKm;
+    }
+
+    public void setTaxa(double taxa) {
+        this.taxa = taxa;
+    }
+
+    public void setTempoHoras(double tempoHoras) {
+        this.tempoHoras = tempoHoras;
+    }
 }

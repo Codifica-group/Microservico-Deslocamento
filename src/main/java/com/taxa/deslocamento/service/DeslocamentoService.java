@@ -3,6 +3,8 @@ package com.taxa.deslocamento.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.taxa.deslocamento.dto.CalculoResponse;
 import com.taxa.deslocamento.dto.EnderecoRequest;
+import com.taxa.deslocamento.exception.APIIntegrationException;
+import com.taxa.deslocamento.exception.CoordenadasNotFoundException;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -30,7 +32,7 @@ public class DeslocamentoService {
         }
     }
 
-    private double[] buscarCoordenadas(EnderecoRequest request) {
+    public double[] buscarCoordenadas(EnderecoRequest request) {
         String enderecoFormatado = String.format("%s %s, %s, SP, %s, Brazil",
                 request.getRua(), request.getNumero(), request.getCidade(), request.getCep());
 
@@ -44,12 +46,14 @@ public class DeslocamentoService {
             JsonNode coords = body.get("features").get(0).get("geometry").get("coordinates");
             System.out.println("Coordenadas: " + coords);
             return new double[]{coords.get(0).asDouble(), coords.get(1).asDouble()};
+        } catch (HttpStatusCodeException e) {
+            throw new APIIntegrationException("Erro ao buscar coordenadas: " + e.getMessage());
         } catch (Exception e) {
-            throw new RuntimeException("Não foi possível obter coordenadas para o endereço: " + e.getMessage());
+            throw new CoordenadasNotFoundException("Não foi possível obter coordenadas para o endereço informado.");
         }
     }
 
-    private DistanciaETempo calcularDistanciaETempo(double latCliente, double lonCliente) {
+    public DistanciaETempo calcularDistanciaETempo(double latCliente, double lonCliente) {
         String url = String.format(Locale.US,
                 "https://api.openrouteservice.org/v2/directions/driving-car?api_key=%s&start=%f,%f&end=%f,%f",
                 ORS_API_KEY, lonCliente, latCliente, LON_PETSHOP, LAT_PETSHOP);
@@ -85,18 +89,18 @@ public class DeslocamentoService {
                     tentativas++;
                     esperar(1000);  // Espera 1 segundo entre tentativas
                 } else if (status == HttpStatus.FORBIDDEN) {
-                    throw new RuntimeException("Erro: acesso negado à API (403). Verifique sua chave.");
+                    throw new APIIntegrationException("Erro: acesso negado à API (403). Verifique sua chave.");
                 } else if (status == HttpStatus.NOT_ACCEPTABLE) {
-                    throw new RuntimeException("Erro: formato de resposta inválido (406). Verifique o header 'Accept'.");
+                    throw new APIIntegrationException("Erro: formato de resposta inválido (406). Verifique o header 'Accept'.");
                 } else {
-                    throw new RuntimeException("Erro ao consultar distância: "
+                    throw new APIIntegrationException("Erro ao consultar distância: "
                             + status + " - " + e.getResponseBodyAsString());
                 }
             } catch (Exception e) {
-                throw new RuntimeException("Erro inesperado ao consultar distância: " + e.getMessage());
+                throw new APIIntegrationException("Erro inesperado ao consultar distância: " + e.getMessage());
             }
         }
-        throw new RuntimeException("Falha após múltiplas tentativas ao calcular distância.");
+        throw new APIIntegrationException("Falha após múltiplas tentativas ao calcular distância.");
     }
 
     private void esperar(long millis) {
@@ -113,7 +117,7 @@ public class DeslocamentoService {
     }
 
     // Classe para representar Distância e Tempo
-    private static class DistanciaETempo {
+    public static class DistanciaETempo {
         double distanciaKm;
         double tempoHoras;
 
