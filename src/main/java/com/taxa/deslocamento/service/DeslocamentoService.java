@@ -13,7 +13,7 @@ import java.util.Locale;
 
 @Service
 public class DeslocamentoService {
-    private static final String ORS_API_KEY = "SUA_CHAVE_API_AQUI"; // Substitua pela sua chave da OpenRouteService
+    private static final String ORS_API_KEY = System.getenv("ORS_API_KEY"); //Adicione a chave da OpenRouteService
     private static final double LAT_PETSHOP = -23.5505;
     private static final double LON_PETSHOP = -46.6333;
 
