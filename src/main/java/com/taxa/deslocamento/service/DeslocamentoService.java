@@ -16,8 +16,8 @@ import java.util.Locale;
 @Service
 public class DeslocamentoService {
     private static final String ORS_API_KEY = System.getenv("ORS_API_KEY"); //Adicione a chave da OpenRouteService
-    private static final double LAT_PETSHOP = -23.5505;
-    private static final double LON_PETSHOP = -46.6333;
+    private static final double LAT_PETSHOP = -23.551859924742757;
+    private static final double LON_PETSHOP = -46.76177857372966;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -26,7 +26,7 @@ public class DeslocamentoService {
             double[] coordsCliente = buscarCoordenadas(request);
             DistanciaETempo distanciaETempo = calcularDistanciaETempo(coordsCliente[1], coordsCliente[0]);
             double taxa = calcularTaxa(distanciaETempo.distanciaKm);
-            return new CalculoResponse(distanciaETempo.distanciaKm, taxa, distanciaETempo.tempoHoras);
+            return new CalculoResponse(distanciaETempo.distanciaKm, taxa, distanciaETempo.tempoMinutos);
         } catch (Exception e) {
             throw new RuntimeException("Erro ao calcular: " + e.getMessage());
         }
@@ -75,12 +75,12 @@ public class DeslocamentoService {
                         .get("duration").asLong();
 
                 double distanciaKm = distanciaMetros / 1000;
-                double tempoHoras = tempoSegundos / 3600.0;
+                double tempoMinutos = tempoSegundos / 60.0;
 
                 System.out.println("Distância: " + distanciaKm + " km");
-                System.out.println("Tempo estimado: " + tempoHoras + " horas");
+                System.out.println("Tempo estimado: " + tempoMinutos + " minutos");
 
-                return new DistanciaETempo(distanciaKm, tempoHoras);
+                return new DistanciaETempo(distanciaKm, tempoMinutos);
 
             } catch (HttpStatusCodeException e) {
                 HttpStatusCode status = e.getStatusCode();
@@ -111,19 +111,28 @@ public class DeslocamentoService {
     }
 
     private double calcularTaxa(double distanciaKm) {
-        if (distanciaKm <= 3) return 10;
-        if (distanciaKm <= 10) return distanciaKm * 2;
-        return distanciaKm * 3;
+        Double precoGasolina = 6.2;
+        Double kmPorLitro = 12.0;
+        Double custoCombustivel = (distanciaKm / kmPorLitro) * precoGasolina;
+
+        Double margemLucro = 1.5;
+        if (distanciaKm >= 3 && distanciaKm < 5) {
+            margemLucro = 1.8;
+        } else if (distanciaKm >= 5) {
+            margemLucro = 2.0;
+        }
+
+        return (custoCombustivel * margemLucro) * 2;
     }
 
     // Classe para representar Distância e Tempo
     public static class DistanciaETempo {
         double distanciaKm;
-        double tempoHoras;
+        double tempoMinutos;
 
-        public DistanciaETempo(double distanciaKm, double tempoHoras) {
+        public DistanciaETempo(double distanciaKm, double tempoMinutos) {
             this.distanciaKm = distanciaKm;
-            this.tempoHoras = tempoHoras;
+            this.tempoMinutos = tempoMinutos;
         }
     }
 }
