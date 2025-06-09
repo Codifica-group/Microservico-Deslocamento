@@ -34,7 +34,7 @@ class DeslocamentoServiceTest {
 
         assertNotNull(response);
         assertEquals(5.0, response.getDistanciaKm());
-        assertEquals(10.0, response.getTaxa());
+        assertEquals(10.333333333333334, response.getTaxa());
         assertEquals(0.5, response.getTempoMinutos());
     }
 

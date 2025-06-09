@@ -44,7 +44,7 @@ class DeslocamentoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.distanciaKm").value(5.0))
                 .andExpect(jsonPath("$.taxa").value(10.0))
-                .andExpect(jsonPath("$.tempoHoras").value(0.5));
+                .andExpect(jsonPath("$.tempoMinutos").value(0.5));
     }
 
     @Test
@@ -55,7 +55,7 @@ class DeslocamentoControllerTest {
         mockMvc.perform(post("/deslocamento")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"cep\":\"01001-000\",\"rua\":\"Rua Teste\",\"numero\":\"123\",\"cidade\":\"São Paulo\"}"))
-                .andExpect(status().isServiceUnavailable()) // Status 503 para APIIntegrationException
+                .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.error").value("SERVICE_UNAVAILABLE"))
                 .andExpect(jsonPath("$.message").value("Erro ao calcular distância e taxa"));
     }
